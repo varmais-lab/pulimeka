@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+  <!-- YouTube Playables SDK MUST be the first script loaded -->
+  <script src="https://www.youtube.com/game_api/v1"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>పులి మేక - Puli Meka (Tigers & Goats)</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div id="app-container">
+    <!-- Top Header Bar -->
+    <header class="top-bar">
+      <div class="brand-title">
+        <span class="title-te" id="ui-title-main">పులి మేక</span>
+        <span class="title-sub" id="ui-title-sub">TIGERS &amp; GOATS</span>
+      </div>
+
+      <div class="top-controls">
+        <button id="btn-lang" class="icon-btn pill-btn" aria-label="Toggle Language" title="Change Language">
+          <span id="lang-label">తెలుగు | EN</span>
+        </button>
+        <button id="btn-audio" class="icon-btn" aria-label="Toggle Audio" title="Mute / Unmute">
+          <span id="audio-icon">🔊</span>
+        </button>
+        <button id="btn-help" class="icon-btn" aria-label="How to Play" title="Rules">
+          <span>?</span>
+        </button>
+        <button id="btn-menu" class="icon-btn" aria-label="Game Menu" title="Menu">
+          <span>⚙️</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- HUD Scoreboard & Status -->
+    <section class="hud-panel">
+      <div class="stat-card goat-card" id="card-goat">
+        <div class="stat-icon">🐐</div>
+        <div class="stat-info">
+          <div class="stat-label" id="lbl-goats-hand">చేతిలో మేకలు</div>
+          <div class="stat-value"><span id="val-goats-hand">15</span><small>/15</small></div>
+        </div>
+      </div>
+
+      <div class="turn-banner" id="turn-banner">
+        <div class="turn-phase" id="lbl-phase">మేకను ఉంచండి</div>
+        <div class="turn-indicator" id="lbl-turn">🐐 మేకల వంతు</div>
+      </div>
+
+      <div class="stat-card tiger-card" id="card-tiger">
+        <div class="stat-icon">🐅</div>
+        <div class="stat-info">
+          <div class="stat-label" id="lbl-captured">చిక్కిన మేకలు</div>
+          <div class="stat-value"><span id="val-captured">0</span><small>/5</small></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Interactive Board Canvas Wrapper -->
+    <main class="board-stage">
+      <canvas id="game-canvas"></canvas>
+
+      <!-- Floating Hint / Toast Banner -->
+      <div id="toast-msg" class="toast-msg hidden"></div>
+    </main>
+
+    <!-- Bottom Action Bar -->
+    <footer class="bottom-bar">
+      <div class="mode-badge" id="lbl-current-mode">🐐 మీరు: మేకలు vs AI</div>
+      <div class="bottom-actions">
+        <button id="btn-hint" class="action-btn secondary-btn">
+          <span>💡</span> <span id="lbl-btn-hint">సూచన (Hint)</span>
+        </button>
+        <button id="btn-restart" class="action-btn primary-btn">
+          <span>🔄</span> <span id="lbl-btn-restart">కొత్త ఆట</span>
+        </button>
+      </div>
+    </footer>
+
+    <!-- Modal: Mode & Difficulty Setup / Menu -->
+    <div id="modal-menu" class="modal-backdrop">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2 id="menu-heading">పులి మేక (Puli Meka)</h2>
+          <p id="menu-subheading">సాంప్రదాయ తెలుగు మేధో ఆట • Traditional Strategy Game</p>
+        </div>
+
+        <div class="modal-body">
+          <label class="section-label" id="lbl-choose-role">మీ పాత్రను ఎంచుకోండి (Choose Your Side):</label>
+          <div class="role-selector">
+            <button class="role-btn active" data-mode="goat_ai" id="mode-goat-ai">
+              <span class="role-emoji">🐐</span>
+              <span class="role-title" id="txt-role-goat">మేకలు (Goats)</span>
+              <span class="role-desc" id="txt-role-goat-desc">పులులను బంధించండి (Trap 3 Tigers)</span>
+            </button>
+            <button class="role-btn" data-mode="tiger_ai" id="mode-tiger-ai">
+              <span class="role-emoji">🐅</span>
+              <span class="role-title" id="txt-role-tiger">పులులు (Tigers)</span>
+              <span class="role-desc" id="txt-role-tiger-desc">5 మేకలను వేటాడండి (Hunt 5 Goats)</span>
+            </button>
+            <button class="role-btn" data-mode="pass_play" id="mode-pass-play">
+              <span class="role-emoji">👥</span>
+              <span class="role-title" id="txt-role-2p">ఇద్దరు ఆటగాళ్ళు (2P)</span>
+              <span class="role-desc" id="txt-role-2p-desc">స్నేహితుడితో ఆడండి (Pass &amp; Play)</span>
+            </button>
+          </div>
+
+          <div id="difficulty-group">
+            <label class="section-label" id="lbl-choose-diff">AI స్థాయి (AI Difficulty):</label>
+            <div class="diff-selector">
+              <button class="diff-btn" data-diff="easy" id="diff-easy">సులభం (Easy)</button>
+              <button class="diff-btn active" data-diff="medium" id="diff-medium">మధ్యస్థం (Medium)</button>
+              <button class="diff-btn" data-diff="hard" id="diff-hard">కఠినం (Master)</button>
+            </div>
+          </div>
+
+          <div class="stats-strip">
+            <div class="stat-pill"><span id="lbl-stat-played">ఆడినవి:</span> <strong id="stat-played">0</strong></div>
+            <div class="stat-pill"><span id="lbl-stat-goat-wins">🐐 విజయాలు:</span> <strong id="stat-goat-wins">0</strong></div>
+            <div class="stat-pill"><span id="lbl-stat-tiger-wins">🐅 విజయాలు:</span> <strong id="stat-tiger-wins">0</strong></div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button id="btn-start-game" class="cta-btn">ఆట ప్రారంభించండి • PLAY NOW</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Rules / How to Play -->
+    <div id="modal-rules" class="modal-backdrop hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2 id="rules-heading">ఆట నియమాలు • How to Play</h2>
+        </div>
+        <div class="modal-body rules-list" id="rules-content">
+          <!-- Populated dynamically based on language -->
+        </div>
+        <div class="modal-footer">
+          <button id="btn-close-rules" class="cta-btn">అర్థమైంది • GOT IT</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Game Over Victory Screen -->
+    <div id="modal-gameover" class="modal-backdrop hidden">
+      <div class="modal-card victory-card">
+        <div class="victory-icon" id="victory-emoji">🏆</div>
+        <h2 id="victory-title">మేకల విజయం!</h2>
+        <p id="victory-reason">పులులన్నీ బంధించబడ్డాయి!</p>
+
+        <div class="victory-stats">
+          <div><span id="lbl-end-moves">మొత్తం ఎత్తులు (Moves):</span> <strong id="val-end-moves">0</strong></div>
+          <div><span id="lbl-end-captured">చిక్కిన మేకలు (Captured):</span> <strong id="val-end-captured">0 / 5</strong></div>
+        </div>
+
+        <div class="modal-footer dual-footer">
+          <button id="btn-change-mode" class="action-btn secondary-btn">⚙️ <span id="lbl-btn-change-mode">మోడ్ మార్చు</span></button>
+          <button id="btn-play-again" class="cta-btn">🔄 <span id="lbl-btn-play-again">మళ్ళీ ఆడండి</span></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: YouTube System Pause Overlay -->
+    <div id="modal-pause" class="modal-backdrop hidden">
+      <div class="modal-card">
+        <h2 id="pause-heading">⏸️ ఆట నిలిపివేయబడింది (Game Paused)</h2>
+        <p id="pause-sub">కొనసాగించడానికి దిగువ బటన్‌ను నొక్కండి</p>
+        <div class="modal-footer">
+          <button id="btn-resume" class="cta-btn">▶️ కొనసాగించు • RESUME</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="./ytgame-wrapper.js"></script>
+  <script src="./audio.js"></script>
+  <script src="./game.js"></script>
+</body>
+</html>
